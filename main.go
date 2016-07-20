@@ -76,17 +76,34 @@ func (w weatherUnderground) queryTemperature(city string) (float64, error) {
 // Method to calculate avg of temperatures of a city as provided by each of
 // the weather info providers in the multiWeatherProvider type
 func (w multiWeatherProvider) getTemperature(city string) (float64, error) {
-    tempSum := 0.0
+    temps := make(chan float64, len(w))
+    errs := make(chan error, len(w))
 
+    // For each provider spawn a goroutine
     for _, provider := range w {
-        temp, err := provider.queryTemperature(city)
-        if err != nil {
-            return 0, nil
-        }
-
-        tempSum += temp
+        go func(wp weatherProvider) {
+            t, err := wp.queryTemperature(city)
+            if err != nil {
+                errs <- err
+                return
+            }
+            temps <- t
+        }(provider)
     }
 
+    tempSum := 0.0
+
+    // Collect temperature or error from the providers
+    for i := 0; i < len(w); i++ {
+        select {
+        case temp := <-temps:
+            tempSum += temp
+        case err := <-errs:
+            return 0, err
+        }
+    }
+
+    // return the avg
     return tempSum / float64(len(w)), nil
 }
 
