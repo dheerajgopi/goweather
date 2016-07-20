@@ -8,20 +8,25 @@ import (
     "time"
 )
 
+// Interface for weather info provider APIs.
 type weatherProvider interface {
     queryTemperature(city string) (float64, error)
 }
 
+// Type for storing array of weatherProvider interface types
 type multiWeatherProvider []weatherProvider
 
+// Type for "open weather map" api
 type openWeatherMap struct{
     apiKey string
 }
 
+// Type for "wunderground" api
 type weatherUnderground struct{
     apiKey string
 }
 
+// Method for querying temperature of a city from openweathermap.org
 func (w openWeatherMap) queryTemperature(city string) (float64, error) {
     resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=" + w.apiKey + "&q=" + city)
     if err != nil {
@@ -44,6 +49,7 @@ func (w openWeatherMap) queryTemperature(city string) (float64, error) {
     return weatherInfo.Main.Kelvin, nil
 }
 
+// Method for querying temperature of a city from wunderground.com/weeather/api
 func (w weatherUnderground) queryTemperature(city string) (float64, error) {
     resp, err := http.Get("http://api.wunderground.com/api/" + w.apiKey + "/conditions/q/" + city + ".json")
     if err != nil {
@@ -67,6 +73,8 @@ func (w weatherUnderground) queryTemperature(city string) (float64, error) {
     return kelvin, nil
 }
 
+// Method to calculate avg of temperatures of a city as provided by each of
+// the weather info providers in the multiWeatherProvider type
 func (w multiWeatherProvider) getTemperature(city string) (float64, error) {
     tempSum := 0.0
 
