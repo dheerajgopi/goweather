@@ -63,7 +63,6 @@ func (w weatherUnderground) queryTemperature(city string) (float64, error) {
     }
 
     kelvin := weatherInfo.Observation.Celsius + 273.15
-    log.Printf("%.2f", weatherInfo.Observation.Celsius)
     log.Printf("weatherUnderground: %s: %.2f", city, kelvin)
     return kelvin, nil
 }
